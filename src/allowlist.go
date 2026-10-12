@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
+// https://github.com/fmuecke/egress-gate
 
 package main
 

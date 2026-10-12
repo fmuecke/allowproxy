@@ -1,8 +1,9 @@
 # SPDX-FileCopyrightText: 2026 Florian Mücke
 # SPDX-License-Identifier: GPL-3.0-or-later
+# https://github.com/fmuecke/egress-gate
 
 #Requires -Version 7
-# Runs all checks and tests, then builds out\network-sandbox.exe from the sources in src\.
+# Runs all checks and tests, then builds out\egress-gate.exe from the sources in src\.
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 
@@ -24,6 +25,6 @@ $version = git describe --tags --always --dirty 2>$null
 if ($LASTEXITCODE -ne 0 -or -not $version) { $version = 'dev' }
 
 $env:CGO_ENABLED = '0'  # static binary, no C runtime dependency
-Invoke-Step 'go build' { go build -trimpath -ldflags "-s -w -X main.version=$version" -o out/network-sandbox.exe ./src }
+Invoke-Step 'go build' { go build -trimpath -ldflags "-s -w -X main.version=$version" -o out/egress-gate.exe ./src }
 
-Write-Host "Built $(Join-Path $PSScriptRoot 'out\network-sandbox.exe') ($version)"
+Write-Host "Built $(Join-Path $PSScriptRoot 'out\egress-gate.exe') ($version)"

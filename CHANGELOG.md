@@ -1,5 +1,9 @@
 # Changelog
 
+## [Unreleased]
+
+- Changed: Renamed from _network-sandbox_ to _egress-gate_, since it controls only outbound traffic and does not sandbox anything. The exe is now `egress-gate.exe`, the default config `egress-gate.json` and the default log `egress-gate.log`; rename existing files or pass `-config`. Stop a running `network-sandbox.exe` with the old exe before switching.
+
 ## [0.3.1]
 
 - Added: `-config-json <json>` takes the config on the command line instead of a file. In the

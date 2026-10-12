@@ -1,5 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Florian Mücke
 # SPDX-License-Identifier: GPL-3.0-or-later
+# https://github.com/fmuecke/egress-gate
 
 name: build
 
@@ -29,9 +30,9 @@ jobs:
 
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: network-sandbox
+          name: egress-gate
           path: |
-            out/network-sandbox.exe
+            out/egress-gate.exe
             README.md
             LICENSE
             CHANGELOG.md
@@ -42,7 +43,7 @@ jobs:
   # tag's CHANGELOG section (a tag v1.2.0 needs a "## [1.2.0]" heading).
   # Kept separate so the write permissions never reach the job that runs the build and tests.
   # Verify a download (zip or extracted exe) with:
-  #   gh attestation verify <file> -R fmuecke/network-sandbox
+  #   gh attestation verify <file> -R fmuecke/egress-gate
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
@@ -54,7 +55,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
-          name: network-sandbox
+          name: egress-gate
           path: dist
 
       - name: Extract release notes
@@ -70,15 +71,15 @@ jobs:
             "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
 
       - name: Bundle
-        run: zip -j "network-sandbox-$GITHUB_REF_NAME.zip" dist/out/network-sandbox.exe dist/README.md dist/LICENSE dist/CHANGELOG.md
+        run: zip -j "egress-gate-$GITHUB_REF_NAME.zip" dist/out/egress-gate.exe dist/README.md dist/LICENSE dist/CHANGELOG.md
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            network-sandbox-${{ github.ref_name }}.zip
-            dist/out/network-sandbox.exe
+            egress-gate-${{ github.ref_name }}.zip
+            dist/out/egress-gate.exe
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "network-sandbox-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
+        run: gh release create "$GITHUB_REF_NAME" "egress-gate-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --notes-file notes.md

@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
+// https://github.com/fmuecke/egress-gate
 
 package main
 
@@ -79,7 +80,7 @@ func NewProxy(allowlist *Allowlist, allowPrivate bool, log *slog.Logger) *Proxy 
 				http.Error(w, nonPublicMessage(rec.target), http.StatusForbidden)
 				return
 			}
-			http.Error(w, "network-sandbox: upstream error: "+err.Error(), http.StatusBadGateway)
+			http.Error(w, "egress-gate: upstream error: "+err.Error(), http.StatusBadGateway)
 		},
 		ErrorLog: slog.NewLogLogger(log.Handler(), slog.LevelWarn),
 	}
@@ -118,12 +119,12 @@ func (p *Proxy) tunnel(w http.ResponseWriter, r *http.Request, rec *record) {
 	rec.target = r.Host
 	host, port, err := splitHostPort(r.Host)
 	if err != nil {
-		p.reject(w, rec, http.StatusBadRequest, "network-sandbox: invalid CONNECT target")
+		p.reject(w, rec, http.StatusBadRequest, "egress-gate: invalid CONNECT target")
 		return
 	}
 	target, ok := p.allowlist.Check(host, port)
 	if !ok {
-		p.reject(w, rec, http.StatusForbidden, fmt.Sprintf("network-sandbox: %s not allowed", r.Host))
+		p.reject(w, rec, http.StatusForbidden, fmt.Sprintf("egress-gate: %s not allowed", r.Host))
 		return
 	}
 	rec.target, rec.decision = target, "allow"
@@ -136,14 +137,14 @@ func (p *Proxy) tunnel(w http.ResponseWriter, r *http.Request, rec *record) {
 	}
 	if err != nil {
 		rec.err = err
-		p.reject(w, rec, http.StatusBadGateway, "network-sandbox: cannot reach "+target)
+		p.reject(w, rec, http.StatusBadGateway, "egress-gate: cannot reach "+target)
 		return
 	}
 	client, buf, err := http.NewResponseController(w).Hijack()
 	if err != nil {
 		upstream.Close()
 		rec.err = err
-		p.reject(w, rec, http.StatusInternalServerError, "network-sandbox: cannot open tunnel")
+		p.reject(w, rec, http.StatusInternalServerError, "egress-gate: cannot open tunnel")
 		return
 	}
 	client.SetDeadline(time.Time{})
@@ -180,7 +181,7 @@ func (p *Proxy) forwardHTTP(w http.ResponseWriter, r *http.Request, rec *record)
 	rec.target = r.URL.Host
 	if r.URL.Scheme != "http" || r.URL.Host == "" {
 		p.reject(w, rec, http.StatusBadRequest,
-			"network-sandbox: not a proxy request; use CONNECT or an absolute http:// URL")
+			"egress-gate: not a proxy request; use CONNECT or an absolute http:// URL")
 		return
 	}
 	portStr := r.URL.Port()
@@ -189,13 +190,13 @@ func (p *Proxy) forwardHTTP(w http.ResponseWriter, r *http.Request, rec *record)
 	}
 	port, err := parsePort(portStr)
 	if err != nil {
-		p.reject(w, rec, http.StatusBadRequest, "network-sandbox: invalid port")
+		p.reject(w, rec, http.StatusBadRequest, "egress-gate: invalid port")
 		return
 	}
 	rec.target = net.JoinHostPort(r.URL.Hostname(), portStr)
 	target, ok := p.allowlist.Check(r.URL.Hostname(), port)
 	if !ok {
-		p.reject(w, rec, http.StatusForbidden, fmt.Sprintf("network-sandbox: %s not allowed", rec.target))
+		p.reject(w, rec, http.StatusForbidden, fmt.Sprintf("egress-gate: %s not allowed", rec.target))
 		return
 	}
 	rec.target, rec.decision = target, "allow"
@@ -214,7 +215,7 @@ func (p *Proxy) forwardHTTP(w http.ResponseWriter, r *http.Request, rec *record)
 var errNonPublic = errors.New("not a public address")
 
 func nonPublicMessage(target string) string {
-	return fmt.Sprintf("network-sandbox: %s resolves to a non-public address", target)
+	return fmt.Sprintf("egress-gate: %s resolves to a non-public address", target)
 }
 
 // dial connects to an allowed target. A hostname is resolved here, by the

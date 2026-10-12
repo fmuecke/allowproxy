@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
+// https://github.com/fmuecke/egress-gate
 
 package main
 
@@ -58,7 +59,7 @@ func ParseConfig(r io.Reader) (*Config, error) {
 		return nil, errors.New("config must be a JSON object")
 	}
 
-	cfg := &Config{LogFile: "network-sandbox.log"}
+	cfg := &Config{LogFile: "egress-gate.log"}
 	logLevel, privateAddresses := "info", "deny"
 	var entries []string
 	seen := map[string]bool{}

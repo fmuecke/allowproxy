@@ -1,5 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
+// https://github.com/fmuecke/egress-gate
 
 package main
 
@@ -168,7 +169,7 @@ func TestHostnameResolvingToNonPublicAddress(t *testing.T) {
 
 	proxy, logs := startProxy(t, target)
 	resp, body := rawConnect(t, proxy, target)
-	if resp.StatusCode != 403 || !strings.Contains(body, "network-sandbox: "+target+" resolves to a non-public address") {
+	if resp.StatusCode != 403 || !strings.Contains(body, "egress-gate: "+target+" resolves to a non-public address") {
 		t.Errorf("CONNECT: got %d %q", resp.StatusCode, body)
 	}
 	logs.waitForLog(t, "method=CONNECT", "target="+target, "decision=deny", "status=403", "error=")
@@ -272,7 +273,7 @@ func TestDenied(t *testing.T) {
 	proxy, logs := startProxy(t, "github.com:443")
 
 	resp, body := rawConnect(t, proxy, "example.com:443")
-	if resp.StatusCode != 403 || !strings.Contains(body, "network-sandbox: example.com:443 not allowed") {
+	if resp.StatusCode != 403 || !strings.Contains(body, "egress-gate: example.com:443 not allowed") {
 		t.Errorf("CONNECT: got %d %q", resp.StatusCode, body)
 	}
 	logs.waitForLog(t, "method=CONNECT", "target=example.com:443", "decision=deny", "status=403")
@@ -350,7 +351,7 @@ func TestRunInvalidConfig(t *testing.T) {
 }
 
 func TestRunMissingConfigCreatesExample(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "network-sandbox.json")
+	path := filepath.Join(t.TempDir(), "egress-gate.json")
 	var stderr bytes.Buffer
 	if code := run([]string{"-config", path}, &stderr); code == 0 {
 		t.Error("exit code 0: the proxy must not start with an unreviewed example")
@@ -364,7 +365,7 @@ func TestRunMissingConfigCreatesExample(t *testing.T) {
 }
 
 func TestRunMissingConfigDirFails(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "no-such-dir", "network-sandbox.json")
+	path := filepath.Join(t.TempDir(), "no-such-dir", "egress-gate.json")
 	var stderr bytes.Buffer
 	if code := run([]string{"-config", path}, &stderr); code == 0 {
 		t.Error("exit code 0")

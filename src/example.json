@@ -1,6 +1,6 @@
 {
   "port": 8080,
-  "logfile": "network-sandbox.log",
+  "logfile": "egress-gate.log",
   "loglevel": "info",
   "privateaddresses": "deny",
   "allowed": [

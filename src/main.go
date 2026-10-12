@@ -1,7 +1,8 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
+// https://github.com/fmuecke/egress-gate
 
-// network-sandbox is a loopback-only HTTP proxy that forwards traffic to
+// egress-gate is a loopback-only HTTP proxy that forwards traffic to
 // allowed destinations only. See ../doc/spec.md.
 package main
 
@@ -38,19 +39,19 @@ of the GNU General Public License version 3+; see LICENSE for details.
 `
 
 // defaultConfigName is the config file used, next to the exe, without -config.
-const defaultConfigName = "network-sandbox.json"
+const defaultConfigName = "egress-gate.json"
 
 // inlineConfigName is the file, next to the exe, that holds a -config-json
 // config while its proxy runs in the background. The port identifies it: only
 // one proxy can listen on it.
 func inlineConfigName(port uint16) string {
-	return fmt.Sprintf("network-sandbox.inline-%d.json", port)
+	return fmt.Sprintf("egress-gate.inline-%d.json", port)
 }
 
 const usage = `
 Loopback-only HTTP proxy that forwards requests to allowed hosts only.
 
-Usage: network-sandbox.exe [command] [-config <path> | -config-json <json>]
+Usage: egress-gate.exe [command] [-config <path> | -config-json <json>]
 
 Commands:
   (none)    run in the console until Ctrl+C
@@ -61,14 +62,14 @@ Commands:
             proxy of that config only
 
 Options:
-  -config <path>   config file (default: network-sandbox.json next to the exe).
+  -config <path>   config file (default: egress-gate.json next to the exe).
                    If it doesn't exist, an example is created there.
                    Each config has its own proxy: start, stop and restart
                    act on the proxy of this config.
   -config-json <json>
                    config as JSON on the command line instead of a file.
                    In the background, it is stored next to the exe as
-                   network-sandbox.inline-<port>.json until "stop", so
+                   egress-gate.inline-<port>.json until "stop", so
                    start, stop and restart act on the proxy of that port.
   -help, -?, /?    show this help
 
@@ -86,7 +87,7 @@ func main() {
 func run(args []string, stderr io.Writer) int {
 	for _, arg := range args {
 		if helpArgs[strings.ToLower(arg)] {
-			fmt.Fprintf(stderr, "network-sandbox %s - %s%s", version, copyright, usage)
+			fmt.Fprintf(stderr, "egress-gate %s - %s%s", version, copyright, usage)
 			return 0
 		}
 	}
@@ -94,9 +95,9 @@ func run(args []string, stderr io.Writer) int {
 	if len(args) > 0 && !strings.HasPrefix(args[0], "-") {
 		command, args = args[0], args[1:]
 	}
-	flags := flag.NewFlagSet("network-sandbox", flag.ContinueOnError)
+	flags := flag.NewFlagSet("egress-gate", flag.ContinueOnError)
 	flags.SetOutput(stderr)
-	flags.Usage = func() { fmt.Fprintln(stderr, "run network-sandbox.exe -help for usage") }
+	flags.Usage = func() { fmt.Fprintln(stderr, "run egress-gate.exe -help for usage") }
 	configPath := flags.String("config", "", "path to the config file")
 	configJSON := flags.String("config-json", "", "config as JSON")
 	if err := flags.Parse(args); err != nil {
@@ -105,7 +106,7 @@ func run(args []string, stderr io.Writer) int {
 	if flags.NArg() == 1 && command == "" {
 		command = flags.Arg(0)
 	} else if flags.NArg() > 0 {
-		fmt.Fprintln(stderr, "network-sandbox: unexpected arguments:", flags.Args())
+		fmt.Fprintln(stderr, "egress-gate: unexpected arguments:", flags.Args())
 		flags.Usage()
 		return 2
 	}
@@ -115,13 +116,13 @@ func run(args []string, stderr io.Writer) int {
 	flags.Visit(func(f *flag.Flag) { given[f.Name] = true })
 	for name, value := range map[string]string{"config": *configPath, "config-json": *configJSON} {
 		if given[name] && strings.TrimSpace(value) == "" {
-			fmt.Fprintf(stderr, "network-sandbox: -%s is empty\n", name)
+			fmt.Fprintf(stderr, "egress-gate: -%s is empty\n", name)
 			flags.Usage()
 			return 2
 		}
 	}
 	if given["config"] && given["config-json"] {
-		fmt.Fprintln(stderr, "network-sandbox: use either -config or -config-json")
+		fmt.Fprintln(stderr, "egress-gate: use either -config or -config-json")
 		flags.Usage()
 		return 2
 	}
@@ -164,7 +165,7 @@ func run(args []string, stderr io.Writer) int {
 	case "status":
 		return status(path, stderr)
 	default:
-		fmt.Fprintf(stderr, "network-sandbox: unknown command %q\n", command)
+		fmt.Fprintf(stderr, "egress-gate: unknown command %q\n", command)
 		flags.Usage()
 		return 2
 	}
@@ -195,7 +196,7 @@ func serve(cfg *Config, source string, stderr io.Writer) int {
 	ctx, stopSignals := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stopSignals()
 	log.Info("started", "version", version, "listen", ln.Addr().String(), "allowlist_entries", cfg.Allowlist.Len(), "config", source)
-	fmt.Fprintf(stderr, "network-sandbox: listening on %s, %d allowlist entries, logging to %s, config is %s\n",
+	fmt.Fprintf(stderr, "egress-gate: listening on %s, %d allowlist entries, logging to %s, config is %s\n",
 		ln.Addr(), cfg.Allowlist.Len(), logFile.Name(), source)
 
 	serveErr := make(chan error, 1)
@@ -251,7 +252,7 @@ func exeDir() string {
 }
 
 func fail(stderr io.Writer, err error) int {
-	fmt.Fprintln(stderr, "network-sandbox:", err)
+	fmt.Fprintln(stderr, "egress-gate:", err)
 	return 1
 }
 
