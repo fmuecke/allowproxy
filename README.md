@@ -139,6 +139,8 @@ To find out which hosts a tool needs, run it through the proxy and look for `dec
 
 The log rotates at 10 MB and keeps the three previous files (`.1` to `.3`), so it never takes more than 40 MB. Give each config its own `logfile`.
 
+If the log file can't be written for a while, e.g. while another program locks it or the disk is full, the proxy keeps running and the lines are lost. Once the file works again, a `WARN` line says how many were lost and why.
+
 ## Company networks with TLS inspection
 
 Behind a firewall that inspects TLS (for example FortiGate), the proxy needs no configuration because it passes HTTPS through untouched. The agent's tools must trust the company CA:

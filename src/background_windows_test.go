@@ -172,6 +172,28 @@ func TestBackgroundCommands(t *testing.T) {
 	}
 }
 
+// TestUnreadablePIDFile checks that a PID file that exists but can't be read
+// is an error, not "not running": stop would otherwise report success while
+// the proxy keeps running.
+func TestUnreadablePIDFile(t *testing.T) {
+	config := filepath.Join(t.TempDir(), "proxy.json")
+	if err := os.Mkdir(pidFilePath(config), 0o700); err != nil { // reading a directory fails
+		t.Fatal(err)
+	}
+	for name, run := range map[string]func(*bytes.Buffer) int{
+		"status": func(out *bytes.Buffer) int { return status(config, out) },
+		"stop":   func(out *bytes.Buffer) int { return stopBackground(config, nil, out) },
+	} {
+		var out bytes.Buffer
+		if code := run(&out); code != 1 || !strings.Contains(out.String(), "cannot read PID file") {
+			t.Errorf("%s: exit %d, output %q; want exit 1 and the read error", name, code, out.String())
+		}
+	}
+	if _, err := os.Stat(pidFilePath(config)); err != nil {
+		t.Error("stop removed the unreadable PID file")
+	}
+}
+
 // buildExe builds the executable into a new directory and returns its path.
 func buildExe(t *testing.T) string {
 	if testing.Short() {

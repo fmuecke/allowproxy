@@ -24,28 +24,6 @@ References:
 - <https://www.iana.org/assignments/iana-ipv4-special-registry>
 - <https://www.iana.org/assignments/iana-ipv6-special-registry>
 
-## Low: propagate PID-file read failures
-
-`openBackground` treats every `os.ReadFile` error as if no PID file exists. Access denied and I/O failures therefore make `status -config` report `not running`, while `stop` can report success without stopping the process.
-
-Follow-up:
-
-- Return `not running` only for `fs.ErrNotExist`.
-- Propagate other read errors with the PID-file path and underlying error.
-- Add a focused test for a PID file that exists but cannot be read, if this can be made reliable on Windows CI.
-
-The current PID plus process-creation-time identity and same-handle termination are sufficient when the config directory is protected; the sidecar does not also need the config path, executable path, or listen address.
-
-## Low: make runtime log-rotation failures observable
-
-`rotatingFile.rotate` ignores close and backup-rename errors. If renaming and truncating or reopening the active file both fail, log writes fail without an operator-visible diagnostic because `slog.Logger` discards handler errors.
-
-Follow-up:
-
-- Define whether persistent rotation failure should preserve the active log, use a separate diagnostic sink, or stop the proxy.
-- Handle close and backup-rename failures according to that policy.
-- Add fault-injection coverage for rename and reopen failures, in addition to the existing successful-rotation test.
-
 ## Verification context
 
 - No high-severity finding remained in the reviewed staged snapshot.

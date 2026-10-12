@@ -396,7 +396,7 @@ type background struct {
 // openBackground opens the background proxy of the config with the given
 // access rights, so that the caller acts on the very process that was
 // checked. It returns nil if no proxy runs: there is no PID file, or the
-// process it names is gone.
+// process it names is gone. A PID file that can't be read is an error.
 //
 // The PID file holds the PID and the creation time of the process, which
 // together identify it; the PID alone could meanwhile belong to another
@@ -404,8 +404,10 @@ type background struct {
 // file can't direct "stop" at an arbitrary process.
 func openBackground(configPath string, access uint32) (*background, error) {
 	data, err := os.ReadFile(pidFilePath(configPath))
-	if err != nil {
+	if errors.Is(err, fs.ErrNotExist) {
 		return nil, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("cannot read PID file: %w", err)
 	}
 	var pid int
 	var created int64

@@ -129,6 +129,7 @@ A file of that name may also be a config someone wrote, so it counts as stored b
   - `debug`: also the URL and headers of plain-HTTP requests. The URL is logged without user information, and its query string is replaced by `[redacted]`. Header values are redacted except those of `Accept`, `Accept-Encoding`, `Content-Length`, `Content-Type` and `User-Agent`: credentials travel in too many headers to list them. `CONNECT` traffic is opaque.
   - `warn` and `error`: proxy-internal problems only.
 - The file is opened in append mode. When a line would grow it beyond 10 MB, it is renamed to `<logfile>.1`, the previous files move up to `.2` and `.3`, and the oldest is deleted. This bounds the log at 40 MB, because a client controls how much is logged. If the file can't be renamed, e.g. because another program holds it open, it is truncated instead. Configs must not share a log file.
+- A log problem never stops the proxy. A line that can't be written, e.g. because the file can't be reopened after rotation or the disk is full, is lost; stdout still gets it in console mode. Once the file works again, it first gets a `WARN` line `log lines lost` with the number of lost lines and the last error, and a `WARN` line `log rotation failed` for problems while rotating, including a truncation instead of a rename.
 
 ## 7. Operation
 
@@ -144,7 +145,7 @@ A file of that name may also be a config someone wrote, so it counts as stored b
   | `restart` | `stop`, then `start`, as one step. Use it to apply config changes. |
   | `status` | Without `-config`: lists every running proxy as `running (pid <pid>) on <listen address> -config <path>`. It reads the process list, so it includes proxies that run in a console. Exits with 0 if any runs, or 3 if none. With `-config`: prints the same line for that config's background proxy, found through its PID file, and exits with 0 if it runs, or 3 if not. |
 
-  Each config has its own PID file and so its own background proxy; `start`, `stop` and `restart` act on the proxy of the given config (by default `egress-gate.json` next to the executable). The PID file is the config path plus `.pid`, e.g. `egress-gate.json.pid`, so two configs never share one and it never coincides with a config.
+  Each config has its own PID file and so its own background proxy; `start`, `stop` and `restart` act on the proxy of the given config (by default `egress-gate.json` next to the executable). The PID file is the config path plus `.pid`, e.g. `egress-gate.json.pid`, so two configs never share one and it never coincides with a config. A missing PID file means not running; a PID file that exists but can't be read makes `start`, `stop`, `restart` and `status -config` fail with the read error.
 
   `start`, `stop` and `restart` of the same config run one at a time. They hold `<config>.pid.lock` open while they run; a command that can't get it within 30 s fails.
 
