@@ -1,15 +1,14 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - 2026-10-15
 
 - Changed: Renamed from _network-sandbox_ to _egress-gate_, since it controls only outbound traffic and does not sandbox anything. The exe is now `egress-gate.exe`, the default config `egress-gate.json` and the default log `egress-gate.log`; rename existing files or pass `-config`. Stop a running `network-sandbox.exe` with the old exe before switching.
 - Fixed: A PID file that exists but can't be read makes `start`, `stop`, `restart` and `status -config` fail with the error. Before, they treated the proxy as not running, so `stop` could report success without stopping it.
 - Fixed: Log lines lost because the log file couldn't be written, and problems while rotating it, are reported in a `WARN` line once the file works again. Before, they were lost silently. While the file can't be reopened, retries no longer shift the backups, and console stdout still gets every line.
 
-## [0.3.1]
+## [0.3.1] - 2026-10-09
 
-- Added: `-config-json <json>` takes the config on the command line instead of a file. In the
-  background, it is stored as `network-sandbox.inline-<port>.json` next to the exe until `stop`.
+- Added: `-config-json <json>` takes the config on the command line instead of a file. In the background, it is stored as `network-sandbox.inline-<port>.json` next to the exe until `stop`.
 
 ## [0.3.0] - 2026-10-07
 
@@ -18,8 +17,7 @@
 
 ## [0.2.1] - 2026-10-04
 
-- Changed: The full console log now goes to stdout and the rotating log file, at the configured log
-  level, if not run in background.
+- Changed: The full console log now goes to stdout and the rotating log file, at the configured log level, if not run in background.
 
 ## [0.2.0] - 2026-09-30
 
