@@ -1,11 +1,11 @@
 # SPDX-FileCopyrightText: 2026 Florian Mücke
 # SPDX-License-Identifier: GPL-3.0-or-later
-# https://github.com/fmuecke/egress-gate
+# https://github.com/fmuecke/allowproxy
 
 #Requires -Version 7
 <#
 .SYNOPSIS
-Starts out\egress-gate.exe with a test allowlist and sends real requests through it with curl.
+Starts out\allowproxy.exe with a test allowlist and sends real requests through it with curl.
 
 .DESCRIPTION
 Needs internet access and a built exe (run build.ps1 first). The allowed HTTPS cases also
@@ -17,13 +17,13 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 
-$exe = Join-Path $PSScriptRoot 'out\egress-gate.exe'
+$exe = Join-Path $PSScriptRoot 'out\allowproxy.exe'
 if (-not (Test-Path $exe)) { throw "$exe not found - run build.ps1 first" }
 
-$work = Join-Path ([IO.Path]::GetTempPath()) "egress-gate-manual-$PID"
+$work = Join-Path ([IO.Path]::GetTempPath()) "allowproxy-manual-$PID"
 New-Item -ItemType Directory $work | Out-Null
-$config = Join-Path $work 'egress-gate.json'
-$log = Join-Path $work 'egress-gate.log'
+$config = Join-Path $work 'allowproxy.json'
+$log = Join-Path $work 'allowproxy.log'
 [ordered]@{
     port     = $Port
     logfile  = $log
@@ -64,9 +64,9 @@ try {
     # Wait until the proxy accepts connections.
     $deadline = (Get-Date).AddSeconds(5)
     while ($true) {
-        if ($process.HasExited) { throw "egress-gate exited with code $($process.ExitCode)" }
+        if ($process.HasExited) { throw "allowproxy exited with code $($process.ExitCode)" }
         try { [Net.Sockets.TcpClient]::new('127.0.0.1', $Port).Dispose(); break } catch {}
-        if ((Get-Date) -gt $deadline) { throw "egress-gate did not start listening on port $Port" }
+        if ((Get-Date) -gt $deadline) { throw "allowproxy did not start listening on port $Port" }
         Start-Sleep -Milliseconds 100
     }
 

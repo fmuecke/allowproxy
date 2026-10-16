@@ -1,10 +1,10 @@
 <!-- 
  SPDX-FileCopyrightText: 2026 Florian Mücke
  SPDX-License-Identifier: GPL-3.0-or-later
- https://github.com/fmuecke/egress-gate 
+ https://github.com/fmuecke/allowproxy 
 -->
 
-# egress-gate — specification
+# allowproxy — specification
 
 A minimal allowlisting HTTP proxy for Windows. It listens on loopback only, forwards traffic to allowed destinations, logs every decision, and denies everything else.
 
@@ -40,8 +40,8 @@ Inspired by [GO Simple Tunnel](https://github.com/go-gost/gost), but as simple a
 
   | Case | Status | Body |
   |---|---|---|
-  | Target not allowed | `403` | `egress-gate: <host:port> not allowed` |
-  | Hostname resolves to a non-public address (§5) | `403` | `egress-gate: <host:port> resolves to a non-public address` |
+  | Target not allowed | `403` | `allowproxy: <host:port> not allowed` |
+  | Hostname resolves to a non-public address (§5) | `403` | `allowproxy: <host:port> resolves to a non-public address` |
   | Not a proxy request (origin-form, e.g. `GET /`) | `400` | short reason |
   | Upstream dial or forward failure | `502` | short reason |
 
@@ -56,14 +56,14 @@ Inspired by [GO Simple Tunnel](https://github.com/go-gost/gost), but as simple a
 
 ## 4. Config file
 
-UTF-8 JSON format. Default path: `egress-gate.json` next to the executable.
+UTF-8 JSON format. Default path: `allowproxy.json` next to the executable.
 
 If the config file doesn't exist, the proxy writes the example below to that path and exits with a nonzero code instead of starting. It never starts with an allowlist nobody has reviewed, and it never overwrites an existing file.
 
 ```json
 {
   "port": 8080,
-  "logfile": "egress-gate.log",
+  "logfile": "allowproxy.log",
   "loglevel": "info",
   "privateaddresses": "deny",
   "allowed": [
@@ -80,7 +80,7 @@ Syntax:
 
 - One object with case-sensitive keys. Comments and trailing commas are not supported. An initial UTF-8 BOM is accepted.
 - `port`: required integer from 1 to 65535.
-- `logfile`: optional nonempty string, defaults to `egress-gate.log`; relative paths resolve next to the executable. Escape Windows path backslashes, e.g. `"C:\\logs\\proxy.log"`.
+- `logfile`: optional nonempty string, defaults to `allowproxy.log`; relative paths resolve next to the executable. Escape Windows path backslashes, e.g. `"C:\\logs\\proxy.log"`.
 - `loglevel`: optional string, `error`, `warn`, `info` (default), or `debug`.
 - `privateaddresses`: optional string, `deny` (default) or `allow`. This controls whether allowed hostnames may resolve to non-public addresses.
 - `loglevel` and `privateaddresses` values are case-insensitive.
@@ -105,7 +105,7 @@ Validation fails closed. Any of the following prints an error to stderr and exit
 - empty allowlist
 - log file that can't be opened
 
-Instead of a file, `-config-json <json>` passes the same JSON object on the command line, with the same validation. It can't be combined with `-config`. The console proxy writes no file. For `start`, `stop`, `restart` and `status`, the config path is `egress-gate.inline-<port>.json` next to the executable, which identifies the proxy by its port (§7). `start` writes the JSON there and deletes it again if starting fails; `stop` deletes it along with the PID file.
+Instead of a file, `-config-json <json>` passes the same JSON object on the command line, with the same validation. It can't be combined with `-config`. The console proxy writes no file. For `start`, `stop`, `restart` and `status`, the config path is `allowproxy.inline-<port>.json` next to the executable, which identifies the proxy by its port (§7). `start` writes the JSON there and deletes it again if starting fails; `stop` deletes it along with the PID file.
 
 A file of that name may also be a config someone wrote, so it counts as stored by `-config-json` only if its PID file ends with the marker `inline`. `start` never overwrites any other file of that name, and `stop` never deletes it. `start`, `stop` and `restart` with `-config-json` fail if the proxy's PID file has no marker, because that proxy was started with `-config`. An empty `-config` or `-config-json` is an invalid argument, not the default config.
 
@@ -133,7 +133,7 @@ A file of that name may also be a config someone wrote, so it counts as stored b
 
 ## 7. Operation
 
-- CLI: `egress-gate.exe [start|stop|restart|status] [-config <path> | -config-json <json>]`.
+- CLI: `allowproxy.exe [start|stop|restart|status] [-config <path> | -config-json <json>]`.
 - `-help`, `-?`, `/?`, `/help` (also `-h`, `--help`, case-insensitive, anywhere on the command line) print usage and exit 0. Invalid arguments print a short hint to `-help` and exit 2.
 - Without a command, it runs in the console. At startup it logs the listen address and the number of allowlist entries. Ctrl+C stops accepting connections, closes open tunnels, and exits.
 - Background mode, without installing a Windows service:
@@ -145,11 +145,11 @@ A file of that name may also be a config someone wrote, so it counts as stored b
   | `restart` | `stop`, then `start`, as one step. Use it to apply config changes. |
   | `status` | Without `-config`: lists every running proxy as `running (pid <pid>) on <listen address> -config <path>`. It reads the process list, so it includes proxies that run in a console. Exits with 0 if any runs, or 3 if none. With `-config`: prints the same line for that config's background proxy, found through its PID file, and exits with 0 if it runs, or 3 if not. |
 
-  Each config has its own PID file and so its own background proxy; `start`, `stop` and `restart` act on the proxy of the given config (by default `egress-gate.json` next to the executable). The PID file is the config path plus `.pid`, e.g. `egress-gate.json.pid`, so two configs never share one and it never coincides with a config. A missing PID file means not running; a PID file that exists but can't be read makes `start`, `stop`, `restart` and `status -config` fail with the read error.
+  Each config has its own PID file and so its own background proxy; `start`, `stop` and `restart` act on the proxy of the given config (by default `allowproxy.json` next to the executable). The PID file is the config path plus `.pid`, e.g. `allowproxy.json.pid`, so two configs never share one and it never coincides with a config. A missing PID file means not running; a PID file that exists but can't be read makes `start`, `stop`, `restart` and `status -config` fail with the read error.
 
   `start`, `stop` and `restart` of the same config run one at a time. They hold `<config>.pid.lock` open while they run; a command that can't get it within 30 s fails.
 
-  A process counts as a running proxy if it was started from an executable named like this one and listens on a `127.0.0.1` TCP port. The name alone isn't enough: it also matches unrelated programs and `egress-gate` commands in progress. A PID alone can be reused by another process, so the PID file also holds the creation time of the process: the file counts only if a process with that PID and creation time is still running and passes the check above. `stop` terminates through the same process handle that it checked. Checking the process requires access to it; for a proxy of another account, `status -config` and `stop` fail with an error unless run with sufficient rights.
+  A process counts as a running proxy if it was started from an executable named like this one and listens on a `127.0.0.1` TCP port. The name alone isn't enough: it also matches unrelated programs and `allowproxy` commands in progress. A PID alone can be reused by another process, so the PID file also holds the creation time of the process: the file counts only if a process with that PID and creation time is still running and passes the check above. `stop` terminates through the same process handle that it checked. Checking the process requires access to it; for a proxy of another account, `status -config` and `stop` fail with an error unless run with sufficient rights.
 
   The listed config is the proxy's own `-config` argument as it was given, or the default config next to its executable if it was started without one. For a proxy that belongs to another account the arguments can't be read, and the line ends after the listen address.
 

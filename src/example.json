@@ -1,6 +1,6 @@
 {
   "port": 8080,
-  "logfile": "egress-gate.log",
+  "logfile": "allowproxy.log",
   "loglevel": "info",
   "privateaddresses": "deny",
   "allowed": [

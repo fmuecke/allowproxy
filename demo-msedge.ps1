@@ -1,8 +1,8 @@
 # SPDX-FileCopyrightText: 2026 Florian Mücke
 # SPDX-License-Identifier: GPL-3.0-or-later
-# https://github.com/fmuecke/egress-gate
+# https://github.com/fmuecke/allowproxy
 
-.\out\egress-gate.exe start     # first run creates out\egress-gate.json; edit it, then start again
+.\out\allowproxy.exe start     # first run creates out\allowproxy.json; edit it, then start again
 
 & "${env:ProgramFiles(x86)}\Microsoft\Edge\Application\msedge.exe" `
     --user-data-dir="$env:TEMP\edge-sandbox" `

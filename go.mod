@@ -1,3 +1,3 @@
-module github.com/fmuecke/egress-gate
+module github.com/fmuecke/allowproxy
 
 go 1.27.1

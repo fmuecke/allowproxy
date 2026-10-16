@@ -1,9 +1,9 @@
-<!-- Project URL: https://github.com/fmuecke/egress-gate -->
+<!-- Project URL: https://github.com/fmuecke/allowproxy -->
 
-[![build](https://github.com/fmuecke/egress-gate/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/fmuecke/egress-gate/actions/workflows/build.yml)
-# egress-gate
+[![build](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml)
+# allowproxy
 
-'egress-gate' is an allowlisting HTTP proxy for Windows that limits which network destinations an AI agent can reach.
+'allowproxy' is an allowlisting HTTP proxy for Windows that limits which network destinations an AI agent can reach.
 
 It listens on `127.0.0.1` only, forwards requests to allowed hosts, blocks everything else, and logs every decision. It's a single `.exe`: no installer, no dependencies, no admin rights.
 
@@ -12,7 +12,7 @@ It listens on `127.0.0.1` only, forwards requests to allowed hosts, blocks every
 Firewall the agent's Windows user to loopback only, and it has no network. Add the proxy, and it reaches only the `host:port` pairs you allow:
 
 ```
-agent (restricted user) ──► egress-gate (127.0.0.1:8080) ──► api.anthropic.com:443  ✔
+agent (restricted user) ──► allowproxy (127.0.0.1:8080) ──► api.anthropic.com:443  ✔
                                                         ╳ ──► anything else        ✘ 403
 ```
 
@@ -21,19 +21,19 @@ agent (restricted user) ──► egress-gate (127.0.0.1:8080) ──► api.ant
 1. Build it (needs [Go](https://go.dev/dl/)):
 
    ```powershell
-   ./build.ps1          # runs all tests and creates out\egress-gate.exe
+   ./build.ps1          # runs all tests and creates out\allowproxy.exe
    ```
 
-2. Run it once. Without a config, it writes an example `egress-gate.json` next to the exe and exits:
+2. Run it once. Without a config, it writes an example `allowproxy.json` next to the exe and exits:
 
    ```powershell
-   .\out\egress-gate.exe
+   .\out\allowproxy.exe
    ```
 
-3. Edit the allowlist in `out\egress-gate.json`, then start the proxy in the background:
+3. Edit the allowlist in `out\allowproxy.json`, then start the proxy in the background:
 
    ```powershell
-   .\out\egress-gate.exe start
+   .\out\allowproxy.exe start
    ```
 
 4. Point the agent at it:
@@ -51,7 +51,7 @@ agent (restricted user) ──► egress-gate (127.0.0.1:8080) ──► api.ant
 ```json
 {
   "port": 8080,
-  "logfile": "egress-gate.log",
+  "logfile": "allowproxy.log",
   "loglevel": "info",
   "privateaddresses": "deny",
   "allowed": [
@@ -66,7 +66,7 @@ The config is a UTF-8 JSON object. `port` is required (integer, 1–65535), and
 
 | Key | Default | Values |
 |---|---|---|
-| `logfile` | `egress-gate.log` | Nonempty path; relative paths resolve next to the exe |
+| `logfile` | `allowproxy.log` | Nonempty path; relative paths resolve next to the exe |
 | `loglevel` | `info` | `error`, `warn`, `info`, `debug` |
 | `privateaddresses` | `deny` | `deny`, `allow` |
 
@@ -91,7 +91,7 @@ The proxy refuses to start on unknown or duplicate keys, invalid values, malform
 ## Commands
 
 ```
-egress-gate.exe [start|stop|restart|status] [-config <path> | -config-json <json>]
+allowproxy.exe [start|stop|restart|status] [-config <path> | -config-json <json>]
 ```
 
 | Command | What it does |
@@ -102,7 +102,7 @@ egress-gate.exe [start|stop|restart|status] [-config <path> | -config-json <json
 | `restart` | Stops and starts, e.g. after editing the config. |
 | `status` | Lists all running proxies with their PID, listen address and config. Exit code 0 if any runs, 3 if not. |
 
-`-help`, `-?` or `/?` shows all options. The default config is `egress-gate.json` next to the exe. The background proxy is recorded in `<config>.pid` next to the config, e.g. `egress-gate.json.pid`.
+`-help`, `-?` or `/?` shows all options. The default config is `allowproxy.json` next to the exe. The background proxy is recorded in `<config>.pid` next to the config, e.g. `allowproxy.json.pid`.
 
 Each config has its own proxy, so you can run several side by side on different ports. `start`, `stop` and `restart` act on the proxy of the given config. `status -config <path>` checks only that config's background proxy.
 
@@ -111,17 +111,17 @@ Each config has its own proxy, so you can run several side by side on different 
 `-config-json` takes the config as a JSON string instead of a file, with the same keys and validation:
 
 ```powershell
-.\egress-gate.exe -config-json '{"port":8080,"allowed":["api.anthropic.com:443"]}'
+.\allowproxy.exe -config-json '{"port":8080,"allowed":["api.anthropic.com:443"]}'
 ```
 
 In PowerShell 7.3 or later, single quotes pass the JSON as written. Windows PowerShell 5.1 strips the inner double quotes, so use a config file there.
 
-In the console, no file is written. `start` stores the config as `egress-gate.inline-<port>.json` next to the exe and `stop` deletes it again. The port identifies the proxy, so `stop`, `status` and `restart` need a `-config-json` with the same port, e.g. `restart` with a changed allowlist.
+In the console, no file is written. `start` stores the config as `allowproxy.inline-<port>.json` next to the exe and `stop` deletes it again. The port identifies the proxy, so `stop`, `status` and `restart` need a `-config-json` with the same port, e.g. `restart` with a changed allowlist.
 
 ## What the agent sees
 
 - **Allowed:** the request goes through unchanged.
-- **Blocked:** `403 Forbidden` with the reason, e.g. `egress-gate: example.com:443 not allowed` or `... resolves to a non-public address`. Browsers show a generic tunnel error for blocked HTTPS instead.
+- **Blocked:** `403 Forbidden` with the reason, e.g. `allowproxy: example.com:443 not allowed` or `... resolves to a non-public address`. Browsers show a generic tunnel error for blocked HTTPS instead.
 - **Target unreachable:** `502 Bad Gateway`.
 
 ## Logs

@@ -2,7 +2,7 @@
 
 ## [0.4.0] - 2026-10-15
 
-- Changed: Renamed from _network-sandbox_ to _egress-gate_, since it controls only outbound traffic and does not sandbox anything. The exe is now `egress-gate.exe`, the default config `egress-gate.json` and the default log `egress-gate.log`; rename existing files or pass `-config`. Stop a running `network-sandbox.exe` with the old exe before switching.
+- Changed: Renamed from _network-sandbox_ to _allowproxy_, since it controls only outbound traffic and does not sandbox anything. The exe is now `allowproxy.exe`, the default config `allowproxy.json` and the default log `allowproxy.log`; rename existing files or pass `-config`. Stop a running `network-sandbox.exe` with the old exe before switching.
 - Fixed: A PID file that exists but can't be read makes `start`, `stop`, `restart` and `status -config` fail with the error. Before, they treated the proxy as not running, so `stop` could report success without stopping it.
 - Fixed: Log lines lost because the log file couldn't be written, and problems while rotating it, are reported in a `WARN` line once the file works again. Before, they were lost silently. While the file can't be reopened, retries no longer shift the backups, and console stdout still gets every line.
 

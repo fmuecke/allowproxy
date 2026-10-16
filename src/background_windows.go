@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
-// https://github.com/fmuecke/egress-gate
+// https://github.com/fmuecke/allowproxy
 
 package main
 
@@ -175,7 +175,7 @@ func startBackground(configPath string, inline []byte, stderr io.Writer) (code i
 		cmd.Process.Kill()
 		return fail(stderr, err)
 	}
-	fmt.Fprintf(stderr, "egress-gate: started in the background (pid %d), listening on %s, logging to %s\n",
+	fmt.Fprintf(stderr, "allowproxy: started in the background (pid %d), listening on %s, logging to %s\n",
 		cmd.Process.Pid, addr, logFile.Name())
 	return 0
 }
@@ -219,7 +219,7 @@ func stopBackground(configPath string, inline []byte, stderr io.Writer) int {
 	}
 	if running == nil {
 		removeFiles() // stale
-		fmt.Fprintln(stderr, "egress-gate: not running")
+		fmt.Fprintln(stderr, "allowproxy: not running")
 		return 0
 	}
 	defer syscall.CloseHandle(running.process)
@@ -227,7 +227,7 @@ func stopBackground(configPath string, inline []byte, stderr io.Writer) int {
 		return fail(stderr, fmt.Errorf("cannot stop pid %d: %w", running.pid, err))
 	}
 	removeFiles()
-	fmt.Fprintf(stderr, "egress-gate: stopped (pid %d)\n", running.pid)
+	fmt.Fprintf(stderr, "allowproxy: stopped (pid %d)\n", running.pid)
 	return 0
 }
 
@@ -238,11 +238,11 @@ func status(configPath string, stderr io.Writer) int {
 		return fail(stderr, err)
 	}
 	if running == nil {
-		fmt.Fprintln(stderr, "egress-gate: not running")
+		fmt.Fprintln(stderr, "allowproxy: not running")
 		return exitNotRunning
 	}
 	syscall.CloseHandle(running.process)
-	fmt.Fprintf(stderr, "egress-gate: running (pid %d) on %s -config %s\n", running.pid, running.listen, configPath)
+	fmt.Fprintf(stderr, "allowproxy: running (pid %d) on %s -config %s\n", running.pid, running.listen, configPath)
 	return 0
 }
 
@@ -255,11 +255,11 @@ func statusAll(stderr io.Writer) int {
 		return fail(stderr, err)
 	}
 	if len(proxies) == 0 {
-		fmt.Fprintln(stderr, "egress-gate: not running")
+		fmt.Fprintln(stderr, "allowproxy: not running")
 		return exitNotRunning
 	}
 	for _, pid := range slices.Sorted(maps.Keys(proxies)) {
-		fmt.Fprintln(stderr, strings.TrimSpace(fmt.Sprintf("egress-gate: running (pid %d) on %s %s", pid, proxies[pid], configArg(pid))))
+		fmt.Fprintln(stderr, strings.TrimSpace(fmt.Sprintf("allowproxy: running (pid %d) on %s %s", pid, proxies[pid], configArg(pid))))
 	}
 	return 0
 }
@@ -267,7 +267,7 @@ func statusAll(stderr io.Writer) int {
 // runningProxies returns the listen address of every running proxy by PID. A
 // proxy is another process that was started from an executable with this one's
 // name and listens on loopback. The name alone also matches unrelated programs
-// and egress-gate commands like this one. Names are compared, not full
+// and allowproxy commands like this one. Names are compared, not full
 // paths, so a copy of the exe elsewhere can still find and stop a proxy.
 func runningProxies() (map[int]string, error) {
 	own, err := os.Executable()

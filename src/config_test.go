@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
-// https://github.com/fmuecke/egress-gate
+// https://github.com/fmuecke/allowproxy
 
 package main
 
@@ -26,7 +26,7 @@ func TestParseConfigExample(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-			if cfg.Port != 8080 || cfg.LogFile != "egress-gate.log" || cfg.LogLevel != slog.LevelInfo || cfg.AllowPrivate {
+			if cfg.Port != 8080 || cfg.LogFile != "allowproxy.log" || cfg.LogLevel != slog.LevelInfo || cfg.AllowPrivate {
 				t.Errorf("got %+v", cfg)
 			}
 			if cfg.Allowlist.Len() != 5 {
@@ -41,7 +41,7 @@ func TestParseConfigJSON(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if cfg.Port != 3128 || cfg.LogFile != "egress-gate.log" || cfg.LogLevel != slog.LevelInfo || cfg.AllowPrivate || cfg.Allowlist.Len() != 1 {
+	if cfg.Port != 3128 || cfg.LogFile != "allowproxy.log" || cfg.LogLevel != slog.LevelInfo || cfg.AllowPrivate || cfg.Allowlist.Len() != 1 {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 	if _, ok := cfg.Allowlist.Check("github.com", 443); !ok {
@@ -97,7 +97,7 @@ func TestParseConfigPrivateAddresses(t *testing.T) {
 func TestParseConfigErrors(t *testing.T) {
 	for name, input := range map[string]string{
 		"empty input": ``,
-		"legacy format": `[egress-gate]
+		"legacy format": `[allowproxy]
 port=8080
 [allowed]
 github.com:443`,
@@ -121,28 +121,28 @@ github.com:443`,
 		"unknown key":                 `{"port":8080,"listen":"0.0.0.0","allowed":["github.com:443"]}`,
 		"wrong key case":              `{"Port":8080,"allowed":["github.com:443"]}`,
 		"mixed key case":              `{"port":8080,"PORT":8081,"allowed":["github.com:443"]}`,
-		"nested section":              `{"egress-gate":{"port":8080},"allowed":["github.com:443"]}`,
+		"nested section":              `{"allowproxy":{"port":8080},"allowed":["github.com:443"]}`,
 		"comment":                     `{"port":8080,/* comment */"allowed":["github.com:443"]}`,
 		"trailing comma":              `{"port":8080,"allowed":["github.com:443"],}`,
 		"truncated":                   `{"port":8080,"allowed":["github.com:443"]`,
 		"trailing object":             `{"port":8080,"allowed":["github.com:443"]} {}`,
 		"trailing null":               `{"port":8080,"allowed":["github.com:443"]} null`,
 		"trailing garbage":            `{"port":8080,"allowed":["github.com:443"]} garbage`,
-		"null port":                   `{"port":null,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
-		"wrong type port":             `{"port":true,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
-		"duplicate port":              `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"port":8080}`,
+		"null port":                   `{"port":null,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
+		"wrong type port":             `{"port":true,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
+		"duplicate port":              `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"port":8080}`,
 		"null logfile":                `{"port":8080,"logfile":null,"loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
 		"wrong type logfile":          `{"port":8080,"logfile":true,"loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"]}`,
-		"duplicate logfile":           `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"logfile":"egress-gate.log"}`,
-		"null loglevel":               `{"port":8080,"logfile":"egress-gate.log","loglevel":null,"privateaddresses":"deny","allowed":["github.com:443"]}`,
-		"wrong type loglevel":         `{"port":8080,"logfile":"egress-gate.log","loglevel":true,"privateaddresses":"deny","allowed":["github.com:443"]}`,
-		"duplicate loglevel":          `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"loglevel":"info"}`,
-		"null privateaddresses":       `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":null,"allowed":["github.com:443"]}`,
-		"wrong type privateaddresses": `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":true,"allowed":["github.com:443"]}`,
-		"duplicate privateaddresses":  `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"privateaddresses":"deny"}`,
-		"null allowed":                `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":null}`,
-		"wrong type allowed":          `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":true}`,
-		"duplicate allowed":           `{"port":8080,"logfile":"egress-gate.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"allowed":["github.com:443"]}`,
+		"duplicate logfile":           `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"logfile":"allowproxy.log"}`,
+		"null loglevel":               `{"port":8080,"logfile":"allowproxy.log","loglevel":null,"privateaddresses":"deny","allowed":["github.com:443"]}`,
+		"wrong type loglevel":         `{"port":8080,"logfile":"allowproxy.log","loglevel":true,"privateaddresses":"deny","allowed":["github.com:443"]}`,
+		"duplicate loglevel":          `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"loglevel":"info"}`,
+		"null privateaddresses":       `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":null,"allowed":["github.com:443"]}`,
+		"wrong type privateaddresses": `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":true,"allowed":["github.com:443"]}`,
+		"duplicate privateaddresses":  `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"privateaddresses":"deny"}`,
+		"null allowed":                `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":null}`,
+		"wrong type allowed":          `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":true}`,
+		"duplicate allowed":           `{"port":8080,"logfile":"allowproxy.log","loglevel":"info","privateaddresses":"deny","allowed":["github.com:443"],"allowed":["github.com:443"]}`,
 	} {
 		t.Run(name, func(t *testing.T) {
 			if _, err := ParseConfig(strings.NewReader(input)); err == nil {

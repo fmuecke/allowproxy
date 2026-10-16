@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 Florian Mücke
 // SPDX-License-Identifier: GPL-3.0-or-later
-// https://github.com/fmuecke/egress-gate
+// https://github.com/fmuecke/allowproxy
 
 package main
 
@@ -87,7 +87,7 @@ func TestBackgroundCommands(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	impostorExe := filepath.Join(t.TempDir(), "egress-gate.exe")
+	impostorExe := filepath.Join(t.TempDir(), "allowproxy.exe")
 	os.WriteFile(impostorExe, cmdExe, 0o700)
 	impostor := exec.Command(impostorExe, "/k")
 	if _, err := impostor.StdinPipe(); err != nil { // cmd runs until its stdin closes
@@ -199,7 +199,7 @@ func buildExe(t *testing.T) string {
 	if testing.Short() {
 		t.Skip("builds the executable")
 	}
-	exe := filepath.Join(t.TempDir(), "egress-gate.exe")
+	exe := filepath.Join(t.TempDir(), "allowproxy.exe")
 	if out, err := exec.Command("go", "build", "-o", exe, ".").CombinedOutput(); err != nil {
 		t.Fatalf("build: %v\n%s", err, out)
 	}
@@ -322,11 +322,11 @@ func TestPIDFilePath(t *testing.T) {
 
 func TestCommandLineArgs(t *testing.T) {
 	for in, want := range map[string]string{
-		`"C:\my dir\egress-gate.exe" -config "C:\my dir\a.json"`: `-config "C:\my dir\a.json"`,
-		`C:\dir\egress-gate.exe -config C:\dir\a.json`:           `-config C:\dir\a.json`,
-		`"C:\dir\egress-gate.exe"`:                               "",
-		`egress-gate.exe`:                                        "",
-		``:                                                       "",
+		`"C:\my dir\allowproxy.exe" -config "C:\my dir\a.json"`: `-config "C:\my dir\a.json"`,
+		`C:\dir\allowproxy.exe -config C:\dir\a.json`:           `-config C:\dir\a.json`,
+		`"C:\dir\allowproxy.exe"`:                               "",
+		`allowproxy.exe`:                                        "",
+		``:                                                      "",
 	} {
 		if got := commandLineArgs(in); got != want {
 			t.Errorf("commandLineArgs(%q) = %q, want %q", in, got, want)

@@ -1,6 +1,6 @@
 # SPDX-FileCopyrightText: 2026 Florian Mücke
 # SPDX-License-Identifier: GPL-3.0-or-later
-# https://github.com/fmuecke/egress-gate
+# https://github.com/fmuecke/allowproxy
 
 name: build
 
@@ -30,9 +30,9 @@ jobs:
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          name: egress-gate
+          name: allowproxy
           path: |
-            out/egress-gate.exe
+            out/allowproxy.exe
             README.md
             LICENSE
             CHANGELOG.md
@@ -43,7 +43,7 @@ jobs:
   # tag's CHANGELOG section (a tag v1.2.0 needs a "## [1.2.0]" heading).
   # Kept separate so the write permissions never reach the job that runs the build and tests.
   # Verify a download (zip or extracted exe) with:
-  #   gh attestation verify <file> -R fmuecke/egress-gate
+  #   gh attestation verify <file> -R fmuecke/allowproxy
   release:
     needs: build
     if: startsWith(github.ref, 'refs/tags/v')
@@ -55,7 +55,7 @@ jobs:
     steps:
       - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: egress-gate
+          name: allowproxy
           path: dist
 
       - name: Extract release notes
@@ -71,15 +71,15 @@ jobs:
             "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" >> notes.md
 
       - name: Bundle
-        run: zip -j "egress-gate-$GITHUB_REF_NAME.zip" dist/out/egress-gate.exe dist/README.md dist/LICENSE dist/CHANGELOG.md
+        run: zip -j "allowproxy-$GITHUB_REF_NAME.zip" dist/out/allowproxy.exe dist/README.md dist/LICENSE dist/CHANGELOG.md
 
       - uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: |
-            egress-gate-${{ github.ref_name }}.zip
-            dist/out/egress-gate.exe
+            allowproxy-${{ github.ref_name }}.zip
+            dist/out/allowproxy.exe
 
       - name: Publish release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "egress-gate-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
+        run: gh release create "$GITHUB_REF_NAME" "allowproxy-$GITHUB_REF_NAME.zip" --repo "$GITHUB_REPOSITORY" --notes-file notes.md
