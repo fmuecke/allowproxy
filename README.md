@@ -1,6 +1,7 @@
 <!-- Project URL: https://github.com/fmuecke/allowproxy -->
 
-[![build](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml)
+[![build](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml/badge.svg)](https://github.com/fmuecke/allowproxy/actions/workflows/build.yml)
+
 # allowproxy
 
 'allowproxy' is an allowlisting HTTP proxy for Windows that limits which network destinations an AI agent can reach.
