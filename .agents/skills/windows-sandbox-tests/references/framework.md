@@ -9,9 +9,9 @@ small host runner and, where needed, a guest driver.
 Preserve an existing project's verified pin unless changing it is part of the task.
 For a new integration, this known revision provides the API described below:
 
-- [Immutable module source](https://gist.githubusercontent.com/fmuecke/2a53528dba05cd208c2cfbef2c547e2a/raw/7b4d862ab00465b06028b11ee4981c48c398602a/WindowsSandboxTest.psm1)
-- SHA-256: `B23495DFF238F65FDD69869BFD58481032BD3F9BA0A7E9D001EDF4444FB4C78C`
-- Module version: `1.0.0`. A version label alone does not identify the bytes; retain
+- [Immutable module source](https://gist.githubusercontent.com/fmuecke/2a53528dba05cd208c2cfbef2c547e2a/raw/499128a7989340fc6e929b4693c5824002dd0593/WindowsSandboxTest.psm1)
+- SHA-256: `A4A1813B857E634D071D80155A3296003FB8B6C77280831C86B7AC96852AAF8F`
+- Module version: `1.1.0`. A version label alone does not identify the bytes; retain
   the immutable revision and hash together.
 
 Download to a temporary file under a project-owned output/cache directory, verify

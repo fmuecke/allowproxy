@@ -31,6 +31,7 @@ type Proxy struct {
 	allowlist    *Allowlist
 	allowPrivate bool // hostnames may resolve to non-public addresses
 	idleTimeout  time.Duration
+	helloTimeout time.Duration // wait for the TLS ClientHello of a tunnel
 	log          *slog.Logger
 	forward      *httputil.ReverseProxy
 
@@ -55,6 +56,7 @@ func NewProxy(allowlist *Allowlist, allowPrivate bool, log *slog.Logger) *Proxy 
 		allowlist:    allowlist,
 		allowPrivate: allowPrivate,
 		idleTimeout:  idleTimeout,
+		helloTimeout: readHeaderTimeout,
 		log:          log,
 		tunnels:      map[net.Conn]bool{},
 	}
@@ -155,9 +157,24 @@ func (p *Proxy) tunnel(w http.ResponseWriter, r *http.Request, rec *record) {
 		return
 	}
 	defer p.untrack(client, upstream)
+	defer upstream.Close()
+	defer client.Close()
 
 	rec.status = http.StatusOK
 	if _, err := io.WriteString(client, "HTTP/1.1 200 Connection established\r\n\r\n"); err != nil {
+		rec.err = err
+		return
+	}
+	// Nothing reaches the server before the ClientHello passed.
+	client.SetReadDeadline(time.Now().Add(p.helloTimeout))
+	hello, err := checkClientHello(buf.Reader, target) // buf.Reader holds bytes already read from the client
+	if err != nil {
+		rec.decision, rec.err = "deny", err
+		client.Write(alertAccessDenied)
+		return
+	}
+	client.SetReadDeadline(time.Time{})
+	if _, err := upstream.Write(hello); err != nil {
 		rec.err = err
 		return
 	}
@@ -166,7 +183,8 @@ func (p *Proxy) tunnel(w http.ResponseWriter, r *http.Request, rec *record) {
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		rec.up, _ = io.Copy(upstream, buf.Reader) // buf.Reader holds bytes already read from the client
+		up, _ := io.Copy(upstream, buf.Reader)
+		rec.up = int64(len(hello)) + up
 		client.Close()
 		upstream.Close()
 	}()

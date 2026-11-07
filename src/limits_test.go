@@ -46,8 +46,17 @@ func tcpServer(t *testing.T, handle func(net.Conn)) string {
 	return ln.Addr().String()
 }
 
-// openTunnel sends a CONNECT and returns the connection with its reader.
+// openTunnel sends a CONNECT and a ClientHello without server name, which
+// passes the check for an IP target, and returns the connection with its reader.
 func openTunnel(t *testing.T, proxy *httptest.Server, target string) (net.Conn, *bufio.Reader) {
+	t.Helper()
+	conn, r := connectTunnel(t, proxy, target)
+	conn.Write(clientHello(t, ""))
+	return conn, r
+}
+
+// connectTunnel sends a CONNECT and returns the connection with its reader.
+func connectTunnel(t *testing.T, proxy *httptest.Server, target string) (net.Conn, *bufio.Reader) {
 	t.Helper()
 	conn, err := net.Dial("tcp", hostOf(proxy.URL))
 	if err != nil {

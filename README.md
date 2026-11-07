@@ -122,6 +122,7 @@ In the console, no file is written. `start` stores the config as `allowproxy.inl
 
 - **Allowed:** the request goes through unchanged.
 - **Blocked:** `403 Forbidden` with the reason, e.g. `allowproxy: example.com:443 not allowed` or `... resolves to a non-public address`. Browsers show a generic tunnel error for blocked HTTPS instead.
+- **Tunnel to another site:** a TLS error `access denied` if the TLS server name isn't the requested host, the client uses Encrypted Client Hello (ECH), or the tunnel carries no TLS at all (e.g. SSH over port 443).
 - **Target unreachable:** `502 Bad Gateway`.
 
 ## Logs
@@ -184,7 +185,8 @@ The proxy contains an agent only together with these:
 
 ## Limitations
 
-- For HTTPS, the proxy controls only `host:port`, not paths or content. It doesn't check the TLS server name either: where several sites share servers (a CDN), a tunnel to an allowed host can ask for another site on them.
+- For HTTPS, the proxy controls `host:port` and the TLS server name, not paths or content. A server that accepts an HTTP `Host` other than the server name (domain fronting) can still serve another site through an allowed tunnel.
+- Clients that send Encrypted Client Hello are refused, including its GREASE form, which clients may send even without an ECH config. Command-line tools such as curl, Node.js, git and Python don't send it; for a browser, turn ECH off, e.g. with the Edge policy `EncryptedClientHelloEnabled`.
 - Allowed hosts can still carry data out, e.g. by pushing to GitHub. Keep the allowlist short.
 - DNS lookups made directly through the Windows DNS service aren't covered.
 - Any local process can use the proxy; there is no authentication. It grants access only to destinations on the allowlist.

@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.4.1] - 2026-11-07
+
+- Security: A `CONNECT` tunnel must start with a TLS ClientHello whose server name (SNI) is the requested host, or none for an IP target, and without Encrypted Client Hello (ECH), which hides the real server name. Before, a tunnel to an allowed host could ask servers it shares with other sites, such as a CDN, for one of those. Tunnels that fail the check, carry no TLS (e.g. SSH over port 443) or send no ClientHello within 30 s get a TLS `access denied` alert and are logged as `decision=deny`.
+- Fixed: A tunnel whose `200` response couldn't be written left both connections open.
+
 ## [0.4.0] - 2026-10-15
 
 - Changed: Renamed from _network-sandbox_ to _allowproxy_, since it controls only outbound traffic and does not sandbox anything. The exe is now `allowproxy.exe`, the default config `allowproxy.json` and the default log `allowproxy.log`; rename existing files or pass `-config`. Stop a running `network-sandbox.exe` with the old exe before switching.
